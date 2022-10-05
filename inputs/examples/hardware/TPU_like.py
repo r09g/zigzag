@@ -18,6 +18,12 @@ def memory_hierarchy_dut(multiplier_array):
     reg_O_1K = MemoryInstance(name="rf_1KB", size=16, r_bw=16, w_bw=16, r_cost=0.54, w_cost=0.6, area=0,
                               r_port=2, w_port=2, rw_port=0, latency=1)
 
+    # reg_W_128B = MemoryInstance(name="rf_128B", size=128 * 8, r_bw=8, w_bw=8, r_cost=9.5, w_cost=9.5, area=0,
+    #                             r_port=1, w_port=1, rw_port=0, latency=1)
+
+    # reg_O_1K = MemoryInstance(name="rf_1KB", size=16, r_bw=16, w_bw=16, r_cost=54, w_cost=60, area=0,
+    #                           r_port=2, w_port=2, rw_port=0, latency=1)
+
     ##################################### on-chip memory hierarchy building blocks #####################################
 
     # sram_32KB_512_1r_1w = \
