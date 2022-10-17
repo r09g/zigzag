@@ -15,6 +15,7 @@ from .Stage import Stage, MainStage
 from .TemporalOrderingConversionStage import TemporalOrderingConversionStage
 from .WorkloadStage import WorkloadStage
 from .ExampleHWIteratorStage import ExampleHWIteratorStage
+from .HWIteratorStage import HWIteratorStage
 
 """
 Parameter providers: these parameters are provided to substages by the following classes:

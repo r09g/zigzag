@@ -25,6 +25,7 @@ class ExampleHWIteratorStage(Stage):
         super().__init__(list_of_callables, **kwargs)
         self.accelerator = accelerator  # This is the accelerator object that contains 
         self.rf_energy_scalings = [1, 10, 100]
+        print('here')
 
     def run(self):
         for rf_energy_scaling in self.rf_energy_scalings:
