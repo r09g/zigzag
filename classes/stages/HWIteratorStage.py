@@ -88,6 +88,7 @@ class HWIteratorStage(Stage):
                                                           {'fh': 'rw_port_1', 'tl': 'rw_port_1', 'fl': 'rw_port_1', 'th': 'rw_port_1'},),
                                               served_dimensions='all')
             core.memory_hierarchy = memory_hierarchy_graph
+            core.check_valid()
             core.recalculate_memory_hierarchy_information()
 
         return accelerator_copy
