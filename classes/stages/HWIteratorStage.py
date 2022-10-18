@@ -8,6 +8,7 @@ from utils import pickle_deepcopy
 from networkx import DiGraph
 
 import pandas as pd
+import math
 from classes.hardware.architecture.memory_instance import MemoryInstance
 from classes.hardware.architecture.memory_hierarchy import MemoryHierarchy
 
@@ -28,60 +29,64 @@ class HWIteratorStage(Stage):
         """
         super().__init__(list_of_callables, **kwargs)
         self.accelerator = accelerator  # This is the accelerator object that contains 
+        self.rf_capacity_list = [x*8 for x in [16,32,64,128,256,512,1024,2048,4096]] 
+        self.sram_capacity_list = [x*8*1024 for x in [16,32,64,128,256,512,1024,2048,4096]]
+        self.dram_capacity_list = [10000000000]
         
-        # Memory table
-        self.mem_table = self.get_mem_from_table('inputs/mem_config_table.csv')
 
     def run(self):
         #TODO
-        for i1 in range(self.mem_table.shape[0]-1):
-            for i2 in range(i1, self.mem_table.shape[0]-1):
-                for i3 in range(i2, self.mem_table.shape[0]-1):
-                    # MODIFICATION OF THE ACCELERATOR OBJECT
-                    updated_accelerator = self.update_accelerator_memory(self.accelerator,[self.mem_table['instance'][i1],self.mem_table['instance'][i2],self.mem_table['instance'][i3],self.mem_table['instance'][self.mem_table.shape[0]-1]])
-                    # QUERY THE UNDERLYING STAGES WITH THE UPDATED ACCELERATOR
-                    # We copy the kwargs just to be sure we don't accidentally keep unwanted changes
-                    kwargs = pickle_deepcopy(self.kwargs)
-                    kwargs["accelerator"] = updated_accelerator
-                    sub_stage = self.list_of_callables[0](self.list_of_callables[1:], **kwargs)
-                    for cme, extra_info in sub_stage.run():
-                        energy_total = cme.energy_total
-                        logger.info(f"Total network energy for configuration # {i1+i2+i3} = {energy_total:.3e}")
-                        yield cme, extra_info
-                        # sub_stage = self.list_of_callables[0](self.list_of_callables[1:], **kwargs)
-        
-    @staticmethod
-    def get_mem_from_table(table_file_path):
-        mem_table = pd.read_csv(table_file_path)      # read mem config csv 
-        for cfg_idx in range(mem_table.shape[0]):       # iterate over and build memory
-            mem_table.loc[cfg_idx, 'instance'] = MemoryInstance(
-                name=(mem_table['type'][cfg_idx] + '_' + str(mem_table['capacity'][cfg_idx]) + '_' + mem_table['node'][cfg_idx]),
-                size=mem_table['capacity'][cfg_idx],
-                r_bw=mem_table['r_bw'][cfg_idx],
-                w_bw=mem_table['w_bw'][cfg_idx],
-                r_cost=mem_table['r_cost'][cfg_idx],
-                w_cost=mem_table['w_cost'][cfg_idx],
-                r_port=mem_table['r_port'][cfg_idx],
-                w_port=mem_table['w_port'][cfg_idx],
-                rw_port=mem_table['rw_port'][cfg_idx],
-                area=mem_table['area'][cfg_idx],
-                latency=mem_table['latency'][cfg_idx],
-            )
-        return mem_table
-
+        for rf_w in self.rf_capacity_list:
+            for rf_o in self.rf_capacity_list:
+                for sram_size in self.sram_capacity_list:
+                    for dram_size in self.dram_capacity_list:
+                        # MODIFICATION OF THE ACCELERATOR OBJECT
+                        updated_accelerator = self.update_accelerator_memory(self.accelerator,[rf_w, rf_o, sram_size, dram_size])
+                        # QUERY THE UNDERLYING STAGES WITH THE UPDATED ACCELERATOR
+                        # We copy the kwargs just to be sure we don't accidentally keep unwanted changes
+                        kwargs = pickle_deepcopy(self.kwargs)
+                        kwargs["accelerator"] = updated_accelerator
+                        sub_stage = self.list_of_callables[0](self.list_of_callables[1:], **kwargs)
+                        for cme, extra_info in sub_stage.run():
+                            energy_total = cme.energy_total
+                            logger.info(f"Total network energy for configuration {rf_w}:{rf_o}:{sram_size}:{dram_size} = {energy_total:.3e}")
+                            yield cme, extra_info
+                            # sub_stage = self.list_of_callables[0](self.list_of_callables[1:], **kwargs)
 
     @staticmethod
     def update_accelerator_memory(accelerator, mem_config):
         accelerator_copy = pickle_deepcopy(accelerator)
+        # construct memory
+        rf_w_inst = MemoryInstance(name="rf_w", size=mem_config[0], r_bw=8, w_bw=8, r_cost=0.095*math.sqrt(mem_config[0]), w_cost=0.095*math.sqrt(mem_config[0]), area=0,
+                                     r_port=1, w_port=1, rw_port=0, latency=1)
+        rf_o_inst = MemoryInstance(name="rf_o", size=mem_config[1], r_bw=8, w_bw=8, r_cost=0.095*math.sqrt(mem_config[1]), w_cost=0.095*math.sqrt(mem_config[1]), area=0,
+                                     r_port=2, w_port=2, rw_port=0, latency=1)
+        # rf_o_inst = MemoryInstance(name="rf_o", size=16, r_bw=16, w_bw=16, r_cost=0.54, w_cost=0.6, area=0,
+        #                           r_port=2, w_port=2, rw_port=0, latency=1)
+        sram_inst = \
+        MemoryInstance(name="sram", size=mem_config[2], r_bw=128*16, w_bw=128*16, r_cost=26.01*math.sqrt(mem_config[2])*16, w_cost=23.65*math.sqrt(mem_config[2])*16, area=0,
+                       r_port=1, w_port=1, rw_port=0, latency=1, min_r_granularity=64, min_w_granularity=64)
+        dram_inst = MemoryInstance(name="dram", size=10000000000, r_bw=64, w_bw=64, r_cost=700, w_cost=750, area=0,
+                              r_port=0, w_port=0, rw_port=1, latency=1)
         # As our accelerator can have different cores, iterate through all its cores
         for core in accelerator_copy.cores:
             # Construct new memory hierarchy
             memory_hierarchy_graph = MemoryHierarchy(core.memory_hierarchy.operational_array)
-            memory_hierarchy_graph.add_memory(memory_instance=mem_config[0], operands=('I2',), served_dimensions={(0, 0)})
-            memory_hierarchy_graph.add_memory(memory_instance=mem_config[1], operands=('O',), served_dimensions={(0, 1)})
-            memory_hierarchy_graph.add_memory(memory_instance=mem_config[2], operands=('I1', 'O'), served_dimensions='all')
-            memory_hierarchy_graph.add_memory(memory_instance=mem_config[3], operands=('I1', 'I2', 'O'), served_dimensions='all')
-
+            memory_hierarchy_graph.add_memory(memory_instance=rf_w_inst, operands=('I2',),
+                                              port_alloc=({'fh': 'w_port_1', 'tl': 'r_port_1', 'fl': None, 'th': None},),
+                                              served_dimensions={(0, 0)})
+            memory_hierarchy_graph.add_memory(memory_instance=rf_o_inst, operands=('O',),
+                                              port_alloc=({'fh': 'w_port_1', 'tl': 'r_port_1', 'fl': 'w_port_2', 'th': 'r_port_2'},),
+                                              served_dimensions={(0, 1)})
+            memory_hierarchy_graph.add_memory(memory_instance=sram_inst, operands=('I1', 'O'),
+                                              port_alloc=({'fh': 'w_port_1', 'tl': 'r_port_1', 'fl': None, 'th': None},
+                                                          {'fh': 'w_port_1', 'tl': 'r_port_1', 'fl': 'w_port_1', 'th': 'r_port_1'},),
+                                              served_dimensions='all')
+            memory_hierarchy_graph.add_memory(memory_instance=dram_inst, operands=('I1', 'I2', 'O'),
+                                              port_alloc=({'fh': 'rw_port_1', 'tl': 'rw_port_1', 'fl': None, 'th': None},
+                                                          {'fh': 'rw_port_1', 'tl': 'rw_port_1', 'fl': None, 'th': None},
+                                                          {'fh': 'rw_port_1', 'tl': 'rw_port_1', 'fl': 'rw_port_1', 'th': 'rw_port_1'},),
+                                              served_dimensions='all')
             core.memory_hierarchy = memory_hierarchy_graph
 
         return accelerator_copy
