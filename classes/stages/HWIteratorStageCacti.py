@@ -18,7 +18,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 # Debug Options
-CACTI_ON = False
+CACTI_ON = True
 
 
 class HWIteratorStageCacti(Stage):
@@ -35,10 +35,10 @@ class HWIteratorStageCacti(Stage):
         super().__init__(list_of_callables, **kwargs)
         self.accelerator = accelerator  # This is the accelerator object that contains
         self.rf_o_size_bytes = [256]
-        self.rf_o_bw_list = [64]
-        self.rf_w_size_bytes = [256]
-        self.rf_w_bw_list = [64] 
-        self.sram_size_bytes = [2*1024]
+        self.rf_o_bw_list = [8]
+        self.rf_w_size_bytes = list(range(128,128+20*50,50))
+        self.rf_w_bw_list = [8] 
+        self.sram_size_bytes = [24*1024]
         self.sram_bw_list = [128]
 
     def run(self):
@@ -79,21 +79,21 @@ class HWIteratorStageCacti(Stage):
         else:
             rf_w_data = {}
             rf_w_data['node'] = 90
-            rf_w_data['size_bytes'] = float(mem_specs[0])
+            rf_w_data['size_bytes'] = float(mem_config[0])
             rf_w_data['bw'] = float(mem_config[1])
             rf_w_data['latency_ns'] = 1
             rf_w_data['cost'] = 1
             rf_w_data['port'] = 1
             rf_o_data = {}
             rf_o_data['node'] = 90
-            rf_o_data['size_bytes'] = float(mem_specs[2])
+            rf_o_data['size_bytes'] = float(mem_config[2])
             rf_o_data['bw'] = float(mem_config[3])
             rf_o_data['latency_ns'] = 1
             rf_o_data['cost'] = 1
             rf_o_data['port'] = 2
             sram_data = {}
             sram_data['node'] = 90
-            sram_data['size_bytes'] = float(mem_specs[4])
+            sram_data['size_bytes'] = float(mem_config[4])
             sram_data['bw'] = float(mem_config[5])
             sram_data['latency_ns'] = 1
             sram_data['cost'] = 1
