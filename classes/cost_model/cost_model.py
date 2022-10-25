@@ -243,7 +243,8 @@ class CostModelEvaluation:
         """
         return {
             "energy": self.energy_total,
-            "latency": self.latency_total2
+            "latency": self.latency_total2,
+            "memory_energy": self.mem_energy
         }
 
     def run(self):

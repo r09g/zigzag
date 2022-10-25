@@ -9,6 +9,7 @@ from networkx import DiGraph
 
 import pandas as pd
 import math
+import pickle
 from classes.hardware.architecture.memory_instance import MemoryInstance
 from classes.hardware.architecture.memory_hierarchy import MemoryHierarchy
 
@@ -29,15 +30,16 @@ class HWIteratorStage(Stage):
         """
         super().__init__(list_of_callables, **kwargs)
         self.accelerator = accelerator  # This is the accelerator object that contains 
-        self.rf_capacity_list = [x*8 for x in [16,32,64,128,256,512,1024,2048,4096]] 
-        self.sram_capacity_list = [x*8*1024 for x in [16,32,64,128,256,512,1024,2048,4096]]
+        self.rf_capacity_list = [x*8 for x in list(range(8,512+8,8))] 
+        self.sram_capacity_list = [x*8*1024 for x in [256]]
         self.dram_capacity_list = [10000000000]
         
 
     def run(self):
         #TODO
+        design_data_point = []
         for rf_w in self.rf_capacity_list:
-            for rf_o in self.rf_capacity_list:
+            for rf_o in [512*8]:
                 for sram_size in self.sram_capacity_list:
                     for dram_size in self.dram_capacity_list:
                         # MODIFICATION OF THE ACCELERATOR OBJECT
@@ -50,8 +52,11 @@ class HWIteratorStage(Stage):
                         for cme, extra_info in sub_stage.run():
                             energy_total = cme.energy_total
                             logger.info(f"Total network energy for configuration {rf_w}:{rf_o}:{sram_size}:{dram_size} = {energy_total:.3e}")
+                            design_data_point.append([rf_w, rf_o, sram_size, dram_size, cme.mem_energy])
                             yield cme, extra_info
                             # sub_stage = self.list_of_callables[0](self.list_of_callables[1:], **kwargs)
+        with open('design_data_point.pkl', 'wb') as file:
+            pickle.dump(design_data_point, file)
 
     @staticmethod
     def update_accelerator_memory(accelerator, mem_config):

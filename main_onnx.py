@@ -22,7 +22,7 @@ _logging.basicConfig(level=_logging_level,
 mainstage = MainStage([  # Initializes the MainStage as entry point
     ONNXModelParserStage,  # Parses the ONNX Model into the workload
     AcceleratorParserStage,  # Parses the accelerator
-    HWIteratorStage,  # Example stage that varies the rf energy scaling
+    HWIteratorStageCacti,  # Example stage that varies the rf energy scaling
     SimpleSaveStage,  # Saves all received CMEs information to a json
     SumStage,  # Adds all CME of all the layers together, getting the total energy, latency, ...
     WorkloadStage,  # Iterates through the different layers in the workload

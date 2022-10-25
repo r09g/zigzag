@@ -16,6 +16,7 @@ from .TemporalOrderingConversionStage import TemporalOrderingConversionStage
 from .WorkloadStage import WorkloadStage
 from .ExampleHWIteratorStage import ExampleHWIteratorStage
 from .HWIteratorStage import HWIteratorStage
+from .HWIteratorStageCacti import HWIteratorStageCacti
 
 """
 Parameter providers: these parameters are provided to substages by the following classes:
