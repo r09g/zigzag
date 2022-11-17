@@ -17,6 +17,7 @@ from .WorkloadStage import WorkloadStage
 from .ExampleHWIteratorStage import ExampleHWIteratorStage
 from .HWIteratorStage import HWIteratorStage
 from .HWIteratorStageCacti import HWIteratorStageCacti
+from .HWIteratorStageCacti_v2 import HWIteratorStageCacti_v2
 
 """
 Parameter providers: these parameters are provided to substages by the following classes:

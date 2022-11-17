@@ -1,16 +1,18 @@
 import os
 
-def get_cacti(size, bw, port, dirpath):
+def get_cacti(node, size, bw, port, dirpath):
     cur_dir = os.getcwd()
     os.chdir(dirpath)
     size_cmd = 'sed -i \'1s/.*/' + '-size (bytes) ' + str(size) + '/\' cache.cfg'
     bw_cmd = 'sed -i \'2s/.*/' + '-output\/input bus width ' + str(bw) + '/\' cache.cfg'
     r_port_cmd = 'sed -i \'3s/.*/' + '-exclusive read port ' + str(port) + '/\' cache.cfg'
-    w_port_cmd = 'sed -i \'3s/.*/' + '-exclusive write port ' + str(port) + '/\' cache.cfg'
+    w_port_cmd = 'sed -i \'4s/.*/' + '-exclusive write port ' + str(port) + '/\' cache.cfg'
+    node_cmd = 'sed -i \'5s/.*/' + '-technology (u) ' + str(node) + '/\' cache.cfg'
     os.system(size_cmd)
     os.system(bw_cmd)
     os.system(r_port_cmd)
     os.system(w_port_cmd)
+    os.system(node_cmd)
 
     if os.path.exists('cache.cfg.out'):
         os.remove('cache.cfg.out')

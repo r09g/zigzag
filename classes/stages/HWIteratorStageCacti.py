@@ -18,7 +18,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 # Debug Options
-CACTI_ON = False
+CACTI_ON = True
 
 
 class HWIteratorStageCacti(Stage):
@@ -34,11 +34,11 @@ class HWIteratorStageCacti(Stage):
         """
         super().__init__(list_of_callables, **kwargs)
         self.accelerator = accelerator  # This is the accelerator object that contains
-        self.rf_o_size_bytes = [256]
+        self.rf_o_size_bytes = [256,512]
         self.rf_o_bw_list = [8]
-        self.rf_w_size_bytes = [256]
+        self.rf_w_size_bytes = [256,512]
         self.rf_w_bw_list = [8] 
-        self.sram_size_bytes = [4*1024]
+        self.sram_size_bytes = [24*1024]
         self.sram_bw_list = [128]
 
     def run(self):

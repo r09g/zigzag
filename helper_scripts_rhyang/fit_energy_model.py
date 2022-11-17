@@ -33,7 +33,7 @@ def mem_energy_logmodel(x, rf_w_size_exp, rf_w_bw_exp, rf_w_access, rf_o_size_ex
 
 
 
-with open('design_data_point.pkl', 'rb') as file:
+with open('design_data_point_fitmodel.pkl', 'rb') as file:
     design_data = pickle.load(file)
 
 rf_w_size = []
@@ -68,9 +68,9 @@ for l in design_data:
 # warnings.filterwarnings('ignore')
 
 plt.scatter(rf_w_size, energy)
-popt, pcov = curve_fit(mem_energy_logmodel, [rf_w_size, rf_w_bw, rf_o_size, rf_o_bw, sram_size, sram_bw, dram_size, dram_bw], energy)
+# popt, pcov = curve_fit(mem_energy_logmodel, [rf_w_size, rf_w_bw, rf_o_size, rf_o_bw, sram_size, sram_bw, dram_size, dram_bw], energy)
 
-plt.plot(rf_w_size, mem_energy_logmodel([rf_w_size, rf_w_bw, rf_o_size, rf_o_bw, sram_size, sram_bw, dram_size, dram_bw], *popt))
+# plt.plot(rf_w_size, mem_energy_logmodel([rf_w_size, rf_w_bw, rf_o_size, rf_o_bw, sram_size, sram_bw, dram_size, dram_bw], *popt))
 plt.savefig('curve.png')
 
 
